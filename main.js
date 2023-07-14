@@ -3,7 +3,6 @@ var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
 
-// update 링크를 능동적으로 추가하기 위한 control 매개변수 추가
 function templateHTML(title, list, body, control){
   return `
   <!doctype html>
@@ -44,7 +43,6 @@ var app = http.createServer(function(request,response){
           var title = 'Welcome';
           var description = 'Hello, Node.js';
           var list = templateList(filelist);
-					// 홈페이지에는 update 링크를 넣지 않음
           var template = templateHTML(title, list, `<h2>${title}</h2>${description}`, `<a href="/create">create</a>`);
           response.writeHead(200);
           response.end(template);
@@ -54,7 +52,6 @@ var app = http.createServer(function(request,response){
           fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
             var title = queryData.id;
             var list = templateList(filelist);
-						// data 디렉토리에 있는 파일을 수정할 수 있는 링크 추가
             var template = templateHTML(title, list, `<h2>${title}</h2>${description}`, `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
             response.writeHead(200);
             response.end(template);
@@ -67,7 +64,7 @@ var app = http.createServer(function(request,response){
         var description = 'Hello, Node.js';
         var list = templateList(filelist);
         var template = templateHTML(title, list, `
-        <form action="http://localhost:3000/create_process" method="post">
+        <form action="/create_process" method="post">
           <p>
             <input type="text" name="title" placeholder="title">
           </p>
@@ -94,6 +91,32 @@ var app = http.createServer(function(request,response){
         fs.writeFile(`data/${title}`, description, 'utf8', function(err){
           response.writeHead(302, {Location: `/?id=${title}`});
           response.end();
+        });
+      });
+    } else if(pathname === '/update'){
+      fs.readdir('./data',  function(error, filelist){
+        fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
+          var title = queryData.id;
+          var list = templateList(filelist);
+					// 수정할 정보를 /update_process로 전송하는 form 추가
+          var template = templateHTML(title, list, 
+          `
+          <form action="/update_process" method="post">
+            <input type="hidden" name="id" value="${title}">
+            <p>
+              <input type="text" name="title" placeholder="title" value="${title}">
+            </p>
+            <p>
+              <textarea name="description" placeholder="description">${description}</textarea>
+            </p>
+            <p>
+              <input type="submit">
+            </p>
+          </form>
+          `, 
+          `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+          response.writeHead(200);
+          response.end(template);
         });
       });
     } else{
