@@ -2,8 +2,8 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 
-// title, list, body를 매개변수로 하여 template을 반환하는 함수
 function templateHTML(title, list, body){
+// create 링크 추가
   return `
   <!doctype html>
   <html>
@@ -14,13 +14,13 @@ function templateHTML(title, list, body){
   <body>
     <h1><a href="/">WEB</a></h1>
     ${list}
+    <a href="/create">create</a>
     ${body}
   </body>
   </html>
   `;
 }
 
-// filelist를 매개변수로 하여 list를 반환하는 함수
 function templateList(filelist){
   var list = '<ul>';
   var i = 0;
@@ -42,18 +42,15 @@ var app = http.createServer(function(request,response){
         fs.readdir('./data',  function(error, filelist){
           var title = 'Welcome';
           var description = 'Hello, Node.js';
-					// list와 template 변수에 함수 반환값 저장
           var list = templateList(filelist);
           var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
           response.writeHead(200);
           response.end(template);
         })
-
       } else{
         fs.readdir('./data',  function(error, filelist){
           fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
             var title = queryData.id;
-						// list와 template 변수에 함수 반환값 저장
             var list = templateList(filelist);
             var template = templateHTML(title, list, `<h2>${title}</h2>${description}`);
             response.writeHead(200);
@@ -61,7 +58,30 @@ var app = http.createServer(function(request,response){
           });
         });
       }
-    } else{
+    } else if(pathname === '/create'){
+      fs.readdir('./data',  function(error, filelist){
+        var title = 'WEB - create';
+        var description = 'Hello, Node.js';
+        var list = templateList(filelist);
+				// templateHTML 함수의 매개변수 body에 form 전달
+        var template = templateHTML(title, list, `
+        <form action="http://localhost:3000/process_create" method="post">
+          <p>
+            <input type="text" name="title" placeholder="title">
+          </p>
+          <p>
+            <textarea name="description" placeholder="description"></textarea>
+          </p>
+          <p>
+            <input type="submit">
+          </p>
+        </form>
+        `);
+        response.writeHead(200);
+        response.end(template);
+      })
+    } 
+    else{
       response.writeHead(404);
       response.end('Not found');
     }
