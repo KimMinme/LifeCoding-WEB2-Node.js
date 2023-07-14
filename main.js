@@ -1,7 +1,7 @@
 var http = require('http');
 var fs = require('fs');
 var url = require('url');
-var qs = require('querystring');  // querystring 모듈 임포트
+var qs = require('querystring');
 
 function templateHTML(title, list, body){
   return `
@@ -61,6 +61,7 @@ var app = http.createServer(function(request,response){
     } else if(pathname === '/create'){
       fs.readdir('./data',  function(error, filelist){
         var title = 'WEB - create';
+        var description = 'Hello, Node.js';
         var list = templateList(filelist);
         var template = templateHTML(title, list, `
         <form action="http://localhost:3000/create_process" method="post">
@@ -80,19 +81,20 @@ var app = http.createServer(function(request,response){
       })
     } else if(pathname === '/create_process'){
       var body = '';
-			// 데이터 이벤트에 대한 리스너 함수
       request.on('data', function(data){
-        body = body + data; // body 변수에 전송받은 데이터 저장
+        body = body + data;
       });
-			// 엔드 이벤트에 대한 리스터 함수
       request.on('end', function(){
-        var post = qs.parse(body); // body를 구문분석하여 객체화
+        var post = qs.parse(body);
         var title = post.title;
         var description = post.description;
-				console.log(post);
+				// 파일을 생성하는 writeFile 함수
+        fs.writeFile(`data/${title}`, description, 'utf8', function(err){
+					// 302는 리다이렉션 코드
+          response.writeHead(302, {Location: `/?id=${title}`});
+          response.end();
+        });
       });
-      response.writeHead(200);
-      response.end('success');
     } else{
       response.writeHead(404);
       response.end('Not found');
