@@ -43,7 +43,10 @@ var app = http.createServer(function(request,response){
           var title = 'Welcome';
           var description = 'Hello, Node.js';
           var list = templateList(filelist);
-          var template = templateHTML(title, list, `<h2>${title}</h2>${description}`, `<a href="/create">create</a>`);
+          var template = templateHTML(title, list, 
+          `<h2>${title}</h2>${description}`, 
+          `<a href="/create">create</a>`
+          );
           response.writeHead(200);
           response.end(template);
         })
@@ -52,7 +55,16 @@ var app = http.createServer(function(request,response){
           fs.readFile(`data/${queryData.id}`, 'utf8', function(err, description){
             var title = queryData.id;
             var list = templateList(filelist);
-            var template = templateHTML(title, list, `<h2>${title}</h2>${description}`, `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+						// delete 버튼 구현
+            var template = templateHTML(title, list, 
+            `<h2>${title}</h2>${description}`, 
+            `<a href="/create">create</a> 
+            <a href="/update?id=${title}">update</a> 
+            <form action="delete_process" method="post">
+              <input type="hidden" name="id" value="${title}">
+              <input type="submit" value="delete">
+            </form>
+            `);
             response.writeHead(200);
             response.end(template);
           });
@@ -119,18 +131,15 @@ var app = http.createServer(function(request,response){
         });
       });
     } else if(pathname === '/update_process'){
-			// 데이터 수신
       var body = '';
       request.on('data', function(data){
         body = body + data;
       });
-			// 데이터 저장
       request.on('end', function(){
         var post = qs.parse(body);
-        var id = post.id; // id 변수 추가
+        var id = post.id;
         var title = post.title;
         var description = post.description;
-				// 파일 이름 및 내용 수정 후 그 페이지로 리다이렉션
         fs.rename(`data/${id}`, `data/${title}`, function(error){
           fs.writeFile(`data/${title}`, description, 'utf8', function(err){
             response.writeHead(302, {Location: `/?id=${title}`});
