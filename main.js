@@ -148,7 +148,6 @@ var app = http.createServer(function(request,response){
           });
         });
       });
-      // fs.unlink() 함수를 이용하여 글삭제
     } else if(pathname === '/delete_process'){
       var body = '';
       request.on('data', function(data){
